@@ -58,5 +58,4 @@ require (
 	gorm.io/gorm v1.30.2 // indirect
 )
 
-// Replace directive for local development
-replace github.com/project-kardeshev/go-ardrive-turbo => ./
+
