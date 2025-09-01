@@ -35,8 +35,7 @@ func (f *TurboFactory) Unauthenticated(config *TurboConfig) TurboUnauthenticated
 		config = DefaultConfig()
 	}
 
-	httpClient := NewDefaultHTTPClient(config.PaymentURL, config.UploadURL)
-	return NewUnauthenticatedClient(httpClient)
+	return NewUnauthenticatedClient(config.PaymentURL, config.UploadURL)
 }
 
 // Authenticated creates a new authenticated Turbo client with the provided signer
@@ -45,8 +44,7 @@ func (f *TurboFactory) Authenticated(config *TurboConfig, signer signers.Signer)
 		config = DefaultConfig()
 	}
 
-	httpClient := NewDefaultHTTPClient(config.PaymentURL, config.UploadURL)
-	return NewAuthenticatedClient(httpClient, signer)
+	return NewAuthenticatedClient(config.PaymentURL, config.UploadURL, signer)
 }
 
 // Global factory instance

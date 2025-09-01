@@ -27,14 +27,14 @@ func TestNewDefaultHTTPClient(t *testing.T) {
 
 func TestUnauthenticatedClientGetBalance(t *testing.T) {
 	mockClient := NewMockHTTPClient()
-	client := NewUnauthenticatedClient(mockClient)
+	client := NewUnauthenticatedClientForTesting(mockClient)
 
 	// Mock successful response
 	mockResponse := &http.Response{
 		StatusCode: 200,
 		Body:       io.NopCloser(strings.NewReader(`{"winc":"1000000000","credits":"1.0","currency":"USD"}`)),
 	}
-	mockClient.SetResponse("https://mock-payment.test/v1/balance?address=test-address", mockResponse)
+	mockClient.SetResponse("https://mock-payment.test/v1/account/balance/arweave?address=test-address", mockResponse)
 
 	ctx := context.Background()
 	balance, err := client.GetBalance(ctx, "test-address")
@@ -69,7 +69,7 @@ func TestUnauthenticatedClientGetBalance(t *testing.T) {
 		t.Errorf("Expected GET request, got %s", lastRequest.Method)
 	}
 
-	expectedURL := "https://mock-payment.test/v1/balance?address=test-address"
+	expectedURL := "https://mock-payment.test/v1/account/balance/arweave?address=test-address"
 	if lastRequest.URL != expectedURL {
 		t.Errorf("Expected URL '%s', got '%s'", expectedURL, lastRequest.URL)
 	}
@@ -77,17 +77,19 @@ func TestUnauthenticatedClientGetBalance(t *testing.T) {
 
 func TestUnauthenticatedClientGetUploadCosts(t *testing.T) {
 	mockClient := NewMockHTTPClient()
-	client := NewUnauthenticatedClient(mockClient)
+	client := NewUnauthenticatedClientForTesting(mockClient)
 
-	// Mock successful response
-	mockResponse := &http.Response{
+	// Mock successful responses for individual byte counts
+	mockResponse1 := &http.Response{
 		StatusCode: 200,
-		Body: io.NopCloser(strings.NewReader(`[
-			{"winc":"1000","bytes":1024},
-			{"winc":"1000000","bytes":1048576}
-		]`)),
+		Body:       io.NopCloser(strings.NewReader(`{"winc":"1000","bytes":1024}`)),
 	}
-	mockClient.SetResponse("https://mock-payment.test/v1/price/bytes/1024,1048576", mockResponse)
+	mockResponse2 := &http.Response{
+		StatusCode: 200,
+		Body:       io.NopCloser(strings.NewReader(`{"winc":"1000000","bytes":1048576}`)),
+	}
+	mockClient.SetResponse("https://mock-payment.test/v1/price/bytes/1024", mockResponse1)
+	mockClient.SetResponse("https://mock-payment.test/v1/price/bytes/1048576", mockResponse2)
 
 	ctx := context.Background()
 	bytes := []int64{1024, 1048576}
@@ -116,11 +118,16 @@ func TestUnauthenticatedClientGetUploadCosts(t *testing.T) {
 	if costs[1].Bytes != 1048576 {
 		t.Errorf("Expected second cost Bytes 1048576, got %d", costs[1].Bytes)
 	}
+
+	// Verify two individual requests were made
+	if mockClient.GetRequestCount() != 2 {
+		t.Errorf("Expected 2 requests, got %d", mockClient.GetRequestCount())
+	}
 }
 
 func TestUnauthenticatedClientUploadSignedDataItem(t *testing.T) {
 	mockClient := NewMockHTTPClient()
-	client := NewUnauthenticatedClient(mockClient)
+	client := NewUnauthenticatedClientForTesting(mockClient)
 
 	// Mock successful upload response
 	mockResponse := &http.Response{
@@ -213,7 +220,7 @@ func TestUnauthenticatedClientUploadSignedDataItem(t *testing.T) {
 
 func TestUnauthenticatedClientUploadSignedDataItemNilRequest(t *testing.T) {
 	mockClient := NewMockHTTPClient()
-	client := NewUnauthenticatedClient(mockClient)
+	client := NewUnauthenticatedClientForTesting(mockClient)
 
 	ctx := context.Background()
 	_, err := client.UploadSignedDataItem(ctx, nil)

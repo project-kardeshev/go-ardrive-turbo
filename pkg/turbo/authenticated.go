@@ -17,8 +17,17 @@ type authenticatedClient struct {
 }
 
 // NewAuthenticatedClient creates a new authenticated Turbo client
-func NewAuthenticatedClient(httpClient HTTPClient, signer signers.Signer) TurboAuthenticatedClient {
-	unauthClient := NewUnauthenticatedClient(httpClient)
+func NewAuthenticatedClient(paymentURL, uploadURL string, signer signers.Signer) TurboAuthenticatedClient {
+	unauthClient := NewUnauthenticatedClient(paymentURL, uploadURL)
+	return &authenticatedClient{
+		TurboUnauthenticatedClient: unauthClient,
+		signer:                     signer,
+	}
+}
+
+// NewAuthenticatedClientForTesting creates a new authenticated Turbo client with HTTPClient injection for testing
+func NewAuthenticatedClientForTesting(httpClient HTTPClient, signer signers.Signer) TurboAuthenticatedClient {
+	unauthClient := NewUnauthenticatedClientForTesting(httpClient)
 	return &authenticatedClient{
 		TurboUnauthenticatedClient: unauthClient,
 		signer:                     signer,

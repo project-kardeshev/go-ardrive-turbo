@@ -17,7 +17,7 @@ func TestNewAuthenticatedClient(t *testing.T) {
 	mockHTTPClient := NewMockHTTPClient()
 	mockSigner := signers.NewMockSigner("test-address", turboTypes.TokenTypeArweave)
 
-	client := NewAuthenticatedClient(mockHTTPClient, mockSigner)
+	client := NewAuthenticatedClientForTesting(mockHTTPClient, mockSigner)
 
 	if client == nil {
 		t.Error("Expected non-nil authenticated client")
@@ -31,14 +31,14 @@ func TestNewAuthenticatedClient(t *testing.T) {
 func TestAuthenticatedClientGetBalanceForSigner(t *testing.T) {
 	mockHTTPClient := NewMockHTTPClient()
 	mockSigner := signers.NewMockSigner("test-address", turboTypes.TokenTypeArweave)
-	client := NewAuthenticatedClient(mockHTTPClient, mockSigner)
+	client := NewAuthenticatedClientForTesting(mockHTTPClient, mockSigner)
 
 	// Mock successful balance response
 	mockResponse := &http.Response{
 		StatusCode: 200,
 		Body:       io.NopCloser(strings.NewReader(`{"winc":"2000000000","credits":"2.0","currency":"USD"}`)),
 	}
-	mockHTTPClient.SetResponse("https://mock-payment.test/v1/balance?address=test-address", mockResponse)
+	mockHTTPClient.SetResponse("https://mock-payment.test/v1/account/balance/arweave?address=test-address", mockResponse)
 
 	ctx := context.Background()
 	balance, err := client.GetBalanceForSigner(ctx)
@@ -57,7 +57,7 @@ func TestAuthenticatedClientGetBalanceForSigner(t *testing.T) {
 
 	// Verify the correct address was used
 	lastRequest := mockHTTPClient.GetLastRequest()
-	expectedURL := "https://mock-payment.test/v1/balance?address=test-address"
+	expectedURL := "https://mock-payment.test/v1/account/balance/arweave?address=test-address"
 	if lastRequest.URL != expectedURL {
 		t.Errorf("Expected URL '%s', got '%s'", expectedURL, lastRequest.URL)
 	}
@@ -66,7 +66,7 @@ func TestAuthenticatedClientGetBalanceForSigner(t *testing.T) {
 func TestAuthenticatedClientUpload(t *testing.T) {
 	mockHTTPClient := NewMockHTTPClient()
 	mockSigner := signers.NewMockSigner("test-address", turboTypes.TokenTypeArweave)
-	client := NewAuthenticatedClient(mockHTTPClient, mockSigner)
+	client := NewAuthenticatedClientForTesting(mockHTTPClient, mockSigner)
 
 	// Mock successful upload response
 	mockResponse := &http.Response{
@@ -179,7 +179,7 @@ func TestAuthenticatedClientUpload(t *testing.T) {
 func TestAuthenticatedClientUploadNilRequest(t *testing.T) {
 	mockHTTPClient := NewMockHTTPClient()
 	mockSigner := signers.NewMockSigner("test-address", turboTypes.TokenTypeArweave)
-	client := NewAuthenticatedClient(mockHTTPClient, mockSigner)
+	client := NewAuthenticatedClientForTesting(mockHTTPClient, mockSigner)
 
 	ctx := context.Background()
 	_, err := client.Upload(ctx, nil)
@@ -196,7 +196,7 @@ func TestAuthenticatedClientUploadNilRequest(t *testing.T) {
 func TestAuthenticatedClientUploadWithDataReader(t *testing.T) {
 	mockHTTPClient := NewMockHTTPClient()
 	mockSigner := signers.NewMockSigner("test-address", turboTypes.TokenTypeArweave)
-	client := NewAuthenticatedClient(mockHTTPClient, mockSigner)
+	client := NewAuthenticatedClientForTesting(mockHTTPClient, mockSigner)
 
 	// Mock successful upload response
 	mockResponse := &http.Response{
@@ -236,7 +236,7 @@ func TestAuthenticatedClientUploadWithDataReader(t *testing.T) {
 func TestAuthenticatedClientUploadNoDataProvided(t *testing.T) {
 	mockHTTPClient := NewMockHTTPClient()
 	mockSigner := signers.NewMockSigner("test-address", turboTypes.TokenTypeArweave)
-	client := NewAuthenticatedClient(mockHTTPClient, mockSigner)
+	client := NewAuthenticatedClientForTesting(mockHTTPClient, mockSigner)
 
 	// Request with neither Data nor DataReader
 	req := &types.UploadRequest{
@@ -260,7 +260,7 @@ func TestAuthenticatedClientUploadNoDataProvided(t *testing.T) {
 func TestAuthenticatedClientUploadSigningError(t *testing.T) {
 	mockHTTPClient := NewMockHTTPClient()
 	mockSigner := signers.NewMockSigner("test-address", turboTypes.TokenTypeArweave)
-	client := NewAuthenticatedClient(mockHTTPClient, mockSigner)
+	client := NewAuthenticatedClientForTesting(mockHTTPClient, mockSigner)
 
 	// Set up signer to return an error
 	mockSigner.SetSignDataItemError(errors.New("signing failed"))
@@ -305,14 +305,14 @@ func TestAuthenticatedClientUploadSigningError(t *testing.T) {
 func TestAuthenticatedClientInheritsUnauthenticatedMethods(t *testing.T) {
 	mockHTTPClient := NewMockHTTPClient()
 	mockSigner := signers.NewMockSigner("test-address", turboTypes.TokenTypeArweave)
-	client := NewAuthenticatedClient(mockHTTPClient, mockSigner)
+	client := NewAuthenticatedClientForTesting(mockHTTPClient, mockSigner)
 
 	// Mock response for GetBalance (unauthenticated method)
 	mockResponse := &http.Response{
 		StatusCode: 200,
 		Body:       io.NopCloser(strings.NewReader(`{"winc":"1000000000","credits":"1.0","currency":"USD"}`)),
 	}
-	mockHTTPClient.SetResponse("https://mock-payment.test/v1/balance?address=other-address", mockResponse)
+	mockHTTPClient.SetResponse("https://mock-payment.test/v1/account/balance/arweave?address=other-address", mockResponse)
 
 	// Test that authenticated client can use unauthenticated methods
 	ctx := context.Background()
