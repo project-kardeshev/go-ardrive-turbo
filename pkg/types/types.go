@@ -76,9 +76,9 @@ type UploadResult struct {
 
 // UploadCost represents the cost estimate for uploading data
 type UploadCost struct {
-	Winc        string                 `json:"winc"`
-	Bytes       int64                  `json:"bytes"`
-	Adjustments map[string]interface{} `json:"adjustments,omitempty"`
+	Winc        string      `json:"winc"`
+	Bytes       int64       `json:"bytes"`
+	Adjustments interface{} `json:"adjustments,omitempty"`
 }
 
 // SignedDataItemUploadRequest represents a request to upload a pre-signed data item

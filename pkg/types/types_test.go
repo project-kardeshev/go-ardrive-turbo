@@ -70,7 +70,8 @@ func TestBalance(t *testing.T) {
 }
 
 func TestUploadCost(t *testing.T) {
-	cost := UploadCost{
+	// Test with map adjustments (object)
+	costWithMap := UploadCost{
 		Winc:  "1000000",
 		Bytes: 1024,
 		Adjustments: map[string]interface{}{
@@ -78,16 +79,45 @@ func TestUploadCost(t *testing.T) {
 		},
 	}
 
-	if cost.Winc != "1000000" {
-		t.Errorf("Expected Winc '1000000', got '%s'", cost.Winc)
+	if costWithMap.Winc != "1000000" {
+		t.Errorf("Expected Winc '1000000', got '%s'", costWithMap.Winc)
 	}
 
-	if cost.Bytes != 1024 {
-		t.Errorf("Expected Bytes 1024, got %d", cost.Bytes)
+	if costWithMap.Bytes != 1024 {
+		t.Errorf("Expected Bytes 1024, got %d", costWithMap.Bytes)
 	}
 
-	if cost.Adjustments["discount"] != 0.1 {
-		t.Errorf("Expected discount 0.1, got %v", cost.Adjustments["discount"])
+	// Type assert to map to access the discount field
+	if adjustments, ok := costWithMap.Adjustments.(map[string]interface{}); ok {
+		if adjustments["discount"] != 0.1 {
+			t.Errorf("Expected discount 0.1, got %v", adjustments["discount"])
+		}
+	} else {
+		t.Errorf("Expected adjustments to be a map, got %T", costWithMap.Adjustments)
+	}
+
+	// Test with array adjustments (empty array like from API)
+	costWithArray := UploadCost{
+		Winc:        "2000000",
+		Bytes:       2048,
+		Adjustments: []interface{}{},
+	}
+
+	if costWithArray.Winc != "2000000" {
+		t.Errorf("Expected Winc '2000000', got '%s'", costWithArray.Winc)
+	}
+
+	if costWithArray.Bytes != 2048 {
+		t.Errorf("Expected Bytes 2048, got %d", costWithArray.Bytes)
+	}
+
+	// Type assert to array to verify it's an empty array
+	if adjustments, ok := costWithArray.Adjustments.([]interface{}); ok {
+		if len(adjustments) != 0 {
+			t.Errorf("Expected empty adjustments array, got %v", adjustments)
+		}
+	} else {
+		t.Errorf("Expected adjustments to be an array, got %T", costWithArray.Adjustments)
 	}
 }
 

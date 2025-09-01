@@ -79,6 +79,9 @@ func (c *testableUnauthenticatedClient) GetUploadCosts(ctx context.Context, byte
 			return nil, fmt.Errorf("failed to parse response for byte count %d: %w", byteCount, err)
 		}
 		
+		// Set the byte count since the API doesn't return it
+		cost.Bytes = byteCount
+		
 		costs[i] = cost
 	}
 
@@ -214,6 +217,9 @@ func (c *unauthenticatedClient) GetUploadCosts(ctx context.Context, bytes []int6
 		if err := ParseJSON(resp, &cost); err != nil {
 			return nil, fmt.Errorf("failed to parse response for byte count %d: %w", byteCount, err)
 		}
+		
+		// Set the byte count since the API doesn't return it
+		cost.Bytes = byteCount
 		
 		costs[i] = cost
 	}
